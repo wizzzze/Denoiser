@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Denioser</title>
+		<style>
+		body{
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+		</style>
+	</head>
+	<body>
+		
+	</body>
+
+
+    <script src="./three.js"></script>
+    <script src="./DenoiserShader.js"></script>
+    <script src="./Denoiser.js"></script>
+    <script>
+    	var camera, scene, renderer, texture;
+
+
+		renderer = new THREE.WebGLRenderer();
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setSize( 1024, 512 ); //test image width and height
+
+		document.body.appendChild(renderer.domElement);
+
+		scene = new THREE.Scene();
+
+		camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+		camera.position.set( 0, 0, 1 );
+
+		var quad = new THREE.PlaneBufferGeometry( 2 , 2 );
+		var viewMaterial = new THREE.ShaderMaterial({
+			uniforms : {
+				buffer : { value : null },
+			},
+			vertexShader : DenoiserShader.vertexShader,
+			fragmentShader : DenoiserShader.debugFragmentShader
+		});
+
+		var viewQuad = new THREE.Mesh(quad, viewMaterial);
+		scene.add(viewQuad);
+		var loader = new THREE.TextureLoader();
+		loader.load( 'test.png' , function ( res ) {
+				viewMaterial.uniforms.buffer.value = res;
+				texture = res;
+				render();
+			}, 
+			undefined,
+
+			// onError callback
+			function ( err ) {
+				console.error( err );
+		});
+
+		
+
+		function render() {
+			renderer.render( scene, camera );
+		}
+
+		var denoiser = new Denoiser(renderer);
+
+		function denoise(){
+			denoiser.setInput(texture);
+			denoiser.denoise();
+		}
+
+    </script>
+
+</html>
